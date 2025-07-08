@@ -1,5 +1,5 @@
 -- =========================================
--- 🔥 AOT:R FULL SCRIPT BY GPT (RELOAD ~1.2s, REFILL ~2s)
+-- 🔥 AOT:R FULL SCRIPT BY GPT (WAIT 4s REFILL + FIXED RETRY)
 -- =========================================
 
 -- ⚡ Safe wait LocalPlayer + PlayerScripts + PlayerModule
@@ -168,30 +168,25 @@ if placeId ~= 13379208636 and placeId ~= 14916516914 then
         return count
     end
 
-    -- Retry
-    local function noTitansAlive()
-        for _, titan in ipairs(titanFolder:GetChildren()) do
-            if not titan:GetAttribute("Dead") then
-                local humanoid = titan:FindFirstChildOfClass("Humanoid")
-                if humanoid and humanoid.Health > 0 then return false end
-            end
-        end
-        return true
-    end
+    -- Retry improved (เช็คซ้ำ + wait เพิ่ม)
     task.spawn(function()
         while task.wait(0.1) do
-            if firstFarmDone and noTitansAlive() and retryCount == 0 then
-                task.wait(0.1)
-                pcall(function()
-                    GET:InvokeServer("Functions", "Retry", "Add")
-                end)
-                retryCount = 1
-                print("[System] Retried after clearing titans.")
+            if firstFarmDone and noTitansAlive() then
+                if retryCount == 0 then
+                    task.wait(0.3)
+                    pcall(function()
+                        GET:InvokeServer("Functions", "Retry", "Add")
+                    end)
+                    retryCount = 1
+                    print("[System] Retried after clearing titans.")
+                else
+                    retryCount = 0
+                end
             end
         end
     end)
 
-    -- Blade + Refill (reload ~1.2s, refill ~2s)
+    -- Blade + Refill (reload ~1.2s, refill ~2s, wait 4s)
     local isReloading, reloadCount, maxReloadBeforeRefill = false, 0, 3
     local refillTank = Workspace.Unclimbable.Reloads.GasTanks:FindFirstChild("Refill")
     task.spawn(function()
@@ -227,8 +222,8 @@ if placeId ~= 13379208636 and placeId ~= 14916516914 then
                         bladesLeft = countAllBlades()
                         print("[Blade Count = "..bladesLeft.."]")
                     until bladesLeft >= 6 or tick()-t > 2
-                    print("[Blade] Wait 5 sec after Refill for safety...")
-                    task.wait(5)
+                    print("[Blade] Wait 4 sec after Refill for safety...")
+                    task.wait(4)
                 end
                 isReloading = false
                 canAttack = true
